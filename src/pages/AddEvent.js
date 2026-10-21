@@ -15,8 +15,13 @@ const AddEvent = ({ onAdd }) => {
       setError('Vui lòng nhập đầy đủ thông tin phía dưới form');
       return;
     }
+    const capNum = Number(capacity);
+    if (!Number.isInteger(capNum) || capNum < 10 || capNum > 1000) {
+      setError('Sức chứa phải từ 10 đến 1000');
+      return;
+    }
     
-    onAdd({ name, location, date, capacity: Number(capacity) });
+    onAdd({ name, location, date, capacity: capNum });
     navigate('/events', { replace: true });
   };
 

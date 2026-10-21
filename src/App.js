@@ -15,19 +15,32 @@ const App = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    axios.get("/data/events.json", { signal: controller.signal })
-      .then(res => {
-        setEvents(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        if (!axios.isCancel(err)) {
-          setError(true);
+    const localData = localStorage.getItem("gk_events");
+
+    if (localData) {
+      setEvents(JSON.parse(localData));
+      setLoading(false);
+    } else {
+      axios.get("/data/events.json", { signal: controller.signal })
+        .then(res => {
+          setEvents(res.data);
           setLoading(false);
-        }
-      });
+        })
+        .catch(err => {
+          if (!axios.isCancel(err)) {
+            setError(true);
+            setLoading(false);
+          }
+        });
+    }
     return () => controller.abort();
   }, []);
+
+  useEffect(() => {
+    if (!loading && events.length > 0) {
+      localStorage.setItem("gk_events", JSON.stringify(events));
+    }
+  }, [events, loading]);
 
   const handleRegister = (id) => {
     setEvents(events.map(ev => 
@@ -50,7 +63,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
+        <Route index element={<Home events={events} />} />
         <Route path="events" element={<EventList events={events} onRegister={handleRegister} onDelete={handleDelete} />} />
         <Route path="events/new" element={<AddEvent onAdd={handleAdd} />} />
         <Route path="events/:id" element={<EventDetail events={events} />} />
